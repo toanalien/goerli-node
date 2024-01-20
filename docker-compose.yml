@@ -1,0 +1,49 @@
+services:
+  geth:
+    image: "ethereum/client-go:stable"
+    container_name: goerli-execution
+    command: |
+      --cache 4096
+      --maxpeers=100
+      --goerli
+      --http
+      --http.vhosts=*
+      --http.rpcprefix=/
+      --http.corsdomain=*
+      --http.addr 0.0.0.0
+      --http.api eth,net,engine,trace
+      --ws
+      --ws.origins *
+      --ws.addr 0.0.0.0
+      --config=/app/config.toml
+    restart: on-failure:5
+    volumes:
+      - "./docker-volumes/geth:/root/.ethereum"
+      - "./config.toml:/app/config.toml"
+    ports:
+      - "8545:8545"
+      - "8555:8546"
+      - "30303:30303/udp"
+  prysm:
+    image: "gcr.io/prysmaticlabs/prysm/beacon-chain:stable"
+    container_name: goerli-consensus
+    command: |
+      --prater
+      --datadir=/data
+      --jwt-secret=/geth/goerli/geth/jwtsecret
+      --rpc-host=0.0.0.0
+      --grpc-gateway-host=0.0.0.0
+      --monitoring-host=0.0.0.0
+      --execution-endpoint=/geth/goerli/geth.ipc
+      --accept-terms-of-use
+      --suggested-fee-recipient=${L1_SUGGESTED_FEE_RECIPIENT_ADDR}
+      --checkpoint-sync-url=${L1_CHECKPOINT_URL}
+    restart: on-failure:5
+    volumes:
+      - "./docker-volumes/prysm:/data"
+      - "./docker-volumes/geth:/geth"
+    ports:
+      - "3500:3500"
+      - "5001:4000"
+      - "12000:12000/udp"
+      - "13000:13000"
