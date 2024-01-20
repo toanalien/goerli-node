@@ -21,7 +21,7 @@ services:
       - "./docker-volumes/geth:/root/.ethereum"
       - "./config.toml:/app/config.toml"
     ports:
-      - "8545:8545"
+      - "${L1_RPC_PORT:-8845}:8545"
       - "8555:8546"
       - "30303:30303/udp"
   prysm:
